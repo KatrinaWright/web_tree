@@ -1,63 +1,36 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
+import { mockFamilySearchData } from '@/mockFamilySearchData';
 
-// Sample data structure for testing
-const sampleFamilyData = {
-  id: "P-1",
-  name: "John Smith",
-  birthDate: "1980-05-15",
-  birthPlace: "New York, USA",
-  parents: [
-    {
-      id: "P-2",
-      name: "Robert Smith",
-      birthDate: "1955-03-20",
-      birthPlace: "Boston, USA",
-      parents: [
-        {
-          id: "P-4",
-          name: "George Smith",
-          birthDate: "1930-01-10",
-          birthPlace: "Chicago, USA",
-          parents: []
-        },
-        {
-          id: "P-5",
-          name: "Martha Johnson",
-          birthDate: "1932-07-22",
-          birthPlace: "Philadelphia, USA",
-          parents: []
-        }
-      ]
-    },
-    {
-      id: "P-3",
-      name: "Mary Williams",
-      birthDate: "1958-11-08",
-      birthPlace: "Los Angeles, USA",
-      parents: [
-        {
-          id: "P-6",
-          name: "James Williams",
-          birthDate: "1933-09-15",
-          birthPlace: "San Francisco, USA",
-          parents: []
-        },
-        {
-          id: "P-7",
-          name: "Elizabeth Brown",
-          birthDate: "1935-04-30",
-          birthPlace: "Seattle, USA",
-          parents: []
-        }
-      ]
-    }
-  ]
-};
+interface Person {
+  id: string;
+  display: {
+    name: string;
+    gender: string;
+    lifespan: string;
+    birthDate: string;
+    birthPlace: string;
+    deathDate?: string;
+    deathPlace?: string;
+  };
+}
 
-const PersonNode = ({ person }) => {
+interface Relationship {
+  type: string;
+  person1: { resource: string };
+  person2: { resource: string };
+}
+
+const PersonNode: React.FC<{ person: Person; relationships: Relationship[] }> = ({ person, relationships }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const hasParents = person.parents && person.parents.length > 0;
+  
+  const children = relationships
+    .filter(rel => rel.type === 'http://gedcomx.org/ParentChild' && rel.person2.resource === `#${person.id}`)
+    .map(rel => rel.person1.resource.slice(1));
+
+  const hasParents = children.length > 0;
+
+  const parents = mockFamilySearchData.persons.filter(p => children.includes(p.id));
 
   return (
     <div className="ml-4">
@@ -74,20 +47,21 @@ const PersonNode = ({ person }) => {
             )}
           </button>
         ) : (
-          <div className="w-6" /> // Spacer for alignment
+          <div className="w-6" />
         )}
         <div className="py-2">
-          <span className="font-medium">{person.name}</span>
+          <span className="font-medium">{person.display.name}</span>
           <div className="text-sm text-gray-600">
-            Born: {person.birthDate} in {person.birthPlace}
+            Born: {person.display.birthDate} in {person.display.birthPlace}
+            {person.display.deathDate && ` | Died: ${person.display.deathDate}`}
           </div>
         </div>
       </div>
       
       {isExpanded && hasParents && (
         <div className="ml-4 border-l-2 border-gray-200">
-          {person.parents.map((parent) => (
-            <PersonNode key={parent.id} person={parent} />
+          {parents.map((parent) => (
+            <PersonNode key={parent.id} person={parent} relationships={relationships} />
           ))}
         </div>
       )}
@@ -95,12 +69,14 @@ const PersonNode = ({ person }) => {
   );
 };
 
-const FamilyTree = ({ initialPerson = sampleFamilyData }) => {
+const FamilyTree: React.FC = () => {
+  const rootPerson = mockFamilySearchData.persons[0]; // Assuming the first person is the root
+
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Family Tree</h1>
       <div className="bg-white rounded-lg shadow">
-        <PersonNode person={initialPerson} />
+        <PersonNode person={rootPerson} relationships={mockFamilySearchData.relationships} />
       </div>
     </div>
   );

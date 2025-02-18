@@ -1,6 +1,8 @@
 'use client';
 
-import FamilyTree from '@/components/FamilyTree';
+import dynamic from 'next/dynamic';
+
+const FamilyTree = dynamic(() => import('@/components/FamilyTree'), { ssr: false });
 
 export default function Home() {
   return (
