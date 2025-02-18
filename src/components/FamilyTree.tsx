@@ -1,71 +1,22 @@
-import React, { useState } from 'react';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { ChevronRight, ChevronDown, User } from 'lucide-react';
+import { useFamilyData } from '@/hooks/useFamilyData';
 
-// Sample data structure for testing
-const sampleFamilyData = {
-  id: "P-1",
-  name: "John Smith",
-  birthDate: "1980-05-15",
-  birthPlace: "New York, USA",
-  parents: [
-    {
-      id: "P-2",
-      name: "Robert Smith",
-      birthDate: "1955-03-20",
-      birthPlace: "Boston, USA",
-      parents: [
-        {
-          id: "P-4",
-          name: "George Smith",
-          birthDate: "1930-01-10",
-          birthPlace: "Chicago, USA",
-          parents: []
-        },
-        {
-          id: "P-5",
-          name: "Martha Johnson",
-          birthDate: "1932-07-22",
-          birthPlace: "Philadelphia, USA",
-          parents: []
-        }
-      ]
-    },
-    {
-      id: "P-3",
-      name: "Mary Williams",
-      birthDate: "1958-11-08",
-      birthPlace: "Los Angeles, USA",
-      parents: [
-        {
-          id: "P-6",
-          name: "James Williams",
-          birthDate: "1933-09-15",
-          birthPlace: "San Francisco, USA",
-          parents: []
-        },
-        {
-          id: "P-7",
-          name: "Elizabeth Brown",
-          birthDate: "1935-04-30",
-          birthPlace: "Seattle, USA",
-          parents: []
-        }
-      ]
-    }
-  ]
-};
+interface PersonCardProps {
+  person: any;
+  isExpanded: boolean;
+  onToggle: () => void;
+  hasParents: boolean;
+}
 
-const PersonNode = ({ person }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const hasParents = person.parents && person.parents.length > 0;
-
+const PersonCard = ({ person, isExpanded, onToggle, hasParents }: PersonCardProps) => {
   return (
-    <div className="ml-4">
-      <div className="flex items-center space-x-2">
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:border-gray-300 transition-colors">
+      <div className="flex items-start space-x-3">
         {hasParents ? (
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="hover:bg-gray-100 p-1 rounded"
+            onClick={onToggle}
+            className="mt-1 hover:bg-gray-100 p-1 rounded"
           >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4" />
@@ -74,34 +25,65 @@ const PersonNode = ({ person }) => {
             )}
           </button>
         ) : (
-          <div className="w-6" /> // Spacer for alignment
+          <div className="w-6" />
         )}
-        <div className="py-2">
-          <span className="font-medium">{person.name}</span>
-          <div className="text-sm text-gray-600">
-            Born: {person.birthDate} in {person.birthPlace}
+        <div>
+          <div className="flex items-center space-x-2">
+            <User className="w-4 h-4 text-gray-500" />
+            <h3 className="font-medium">{person.name}</h3>
+          </div>
+          <div className="mt-1 text-sm text-gray-600">
+            <div>Birth: {person.birthDate}</div>
+            <div>Place: {person.birthPlace}</div>
+            <div>Lifespan: {person.lifespan}</div>
           </div>
         </div>
       </div>
-      
-      {isExpanded && hasParents && (
-        <div className="ml-4 border-l-2 border-gray-200">
-          {person.parents.map((parent) => (
-            <PersonNode key={parent.id} person={parent} />
-          ))}
-        </div>
-      )}
     </div>
   );
 };
 
-const FamilyTree = ({ initialPerson = sampleFamilyData }) => {
+const FamilyTree = ({ initialPersonId = "KW7G-28J" }) => {
+  const { loading, error, familyData, expandedPersons, togglePerson } = useFamilyData(initialPersonId);
+
+  if (loading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {error}</div>;
+  }
+
+  if (!familyData) {
+    return <div className="p-4">No data available</div>;
+  }
+
+  const renderPerson = (person: any) => {
+    const isExpanded = expandedPersons.has(person.id);
+    const hasParents = person.parentIds?.length > 0;
+
+    return (
+      <div key={person.id} className="space-y-4">
+        <PersonCard
+          person={person}
+          isExpanded={isExpanded}
+          onToggle={() => togglePerson(person.id)}
+          hasParents={hasParents}
+        />
+        
+        {isExpanded && person.parents && (
+          <div className="ml-8 space-y-4 border-l-2 border-gray-200 pl-4">
+            {person.parents.map((parent: any) => renderPerson(parent))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Family Tree</h1>
-      <div className="bg-white rounded-lg shadow">
-        <PersonNode person={initialPerson} />
-      </div>
+      <h1 className="text-2xl font-bold mb-6">Family Tree</h1>
+      {renderPerson(familyData)}
     </div>
   );
 };
