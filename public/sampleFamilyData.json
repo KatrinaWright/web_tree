@@ -1,0 +1,44 @@
+
+{
+    "person": {
+      "id": "P1",
+      "name": "John Doe",
+      "birth": "1980-01-01",
+      "parents": [
+        {
+          "id": "P2",
+          "name": "Robert Doe",
+          "birth": "1950-05-15",
+          "parents": [
+            {
+              "id": "P4",
+              "name": "George Doe",
+              "birth": "1920-11-30"
+            },
+            {
+              "id": "P5",
+              "name": "Martha Smith",
+              "birth": "1922-07-22"
+            }
+          ]
+        },
+        {
+          "id": "P3",
+          "name": "Jane Johnson",
+          "birth": "1952-09-22",
+          "parents": [
+            {
+              "id": "P6",
+              "name": "William Johnson",
+              "birth": "1925-03-17"
+            },
+            {
+              "id": "P7",
+              "name": "Emily Brown",
+              "birth": "1928-12-05"
+            }
+          ]
+        }
+      ]
+    }
+  }
